@@ -19,7 +19,7 @@ export default function BgIframe({
   // ready: initial BlueMap load complete; transitioning: overlay fading for a slide swap
   const [ready, setReady] = useState(false)
   const [transitioning, setTransitioning] = useState(false)
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
   const indexRef = useRef(0)
   const initialLoadDone = useRef(false)
 
@@ -30,10 +30,16 @@ export default function BgIframe({
     const id = setInterval(() => {
       // 1. Fade overlay to fully opaque
       setTransitioning(true)
-      // 2. Once fully opaque, swap the src
+      // 2. Once fully opaque, swap via location.replace (no history entry)
       const t1 = setTimeout(() => {
         indexRef.current = (indexRef.current + 1) % srcs.length
-        setCurrentIndex(indexRef.current)
+        const next = srcs[indexRef.current]
+        try {
+          iframeRef.current?.contentWindow?.location.replace(next)
+        } catch {
+          // cross-origin guard — fallback to src reassignment if needed
+          if (iframeRef.current) iframeRef.current.src = next
+        }
         // 3. Brief pause then fade back in (optimistic — don't wait for load)
         const t2 = setTimeout(() => setTransitioning(false), 500)
         pending.push(t2)
@@ -60,7 +66,8 @@ export default function BgIframe({
   return createPortal(
     <>
       <iframe
-        src={srcs[currentIndex]}
+        ref={iframeRef}
+        src={srcs[0]}
         onLoad={handleLoad}
         style={{
           position: 'fixed',
