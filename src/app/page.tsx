@@ -111,9 +111,14 @@ function withParams(url: string, params: Record<string, string>): string {
   return `${url.slice(0, idx)}?${qs}${url.slice(idx)}`
 }
 
-/** Appends ?embed=1 before the # so BlueMap hides its UI chrome in the widget. */
+/** Params for the live map widget — embedded, no controls, no zoom. */
 function withEmbedParam(url: string): string {
-  return withParams(url, { embed: '1' })
+  return withParams(url, { embed: '1', controls: 'false', zoom: 'false' })
+}
+
+/** Params for background iframes — embedded, night, no controls, no zoom. */
+function withBgParams(url: string): string {
+  return withParams(url, { embed: '1', night: '1', controls: 'false', zoom: 'false' })
 }
 
 function formatWorld(world: string | undefined): string {
@@ -186,7 +191,7 @@ export default async function Home() {
       {/* Cinematic background map — portaled into document.body, identical to iframe-test.html */}
       {BLUEMAP_BG_URLS.length > 0 && (
         <BgIframe
-          srcs={BLUEMAP_BG_URLS.map((url) => withParams(url, { embed: '1', night: '1' })).join('|')}
+          srcs={BLUEMAP_BG_URLS.map((url) => withBgParams(url)).join('|')}
           slideshowIntervalMs={BLUEMAP_BG_SLIDESHOW_INTERVAL}
         />
       )}
